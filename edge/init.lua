@@ -1,17 +1,14 @@
 edge = {}
 -- These values can be overridden by other plugins.
-edge.negative = -30896
-edge.positive = 30911
+edge.x = 150
+edge.z = 250
 edge.node = "edge:node"
-edge.correction = "edge:cave_correction"
 
 function edge:is(pos)
-	if pos.x < self.negative or
-	pos.y < self.negative or
-	pos.z < self.negative or
-	pos.x > self.positive or
-	pos.y > self.positive or
-	pos.z > self.positive then
+	if pos.x < -self.x or
+	pos.z < -self.z or
+	pos.x > self.x-1 or
+	pos.z > self.z-1 then
 		return true
 	end
 end
@@ -24,11 +21,11 @@ function edge:build(minp, maxp, cave_correction)
 				local action_node = minetest.get_node(action_pos).name
 				if self:is(action_pos) then
 					if cave_correction and action_node == "air" then
-						minetest.set_node(action_pos, {name=edge.correction})
+						minetest.set_node(action_pos, {name=edge.node})
 					elseif not cave_correction and action_node ~= edge.node then
 						minetest.set_node(action_pos, {name=edge.node})
 					end
-				elseif action_node == edge.node or action_node == edge.correction then
+				elseif action_node == edge.node then
 					minetest.set_node(action_pos, {name="air"})
 				end
 			end
@@ -38,21 +35,8 @@ end
 
 minetest.register_node("edge:node", {
 	description = "Edge Node",
-	tiles = {"edge_node.png"},
-	groups = {edge=1},
 	paramtype = "light",
-	drawtype = "glasslike",
-	digable = false,
-	sunlight_propagates = true,
-	pointable = false,
-})
-
-minetest.register_node("edge:cave_correction", {
-	description = "Edge Node",
-	tiles = {"edge_correction.png"},
-	groups = {edge=1},
-	paramtype = "light",
-	drawtype = "glasslike",
+	drawtype = "airlike",
 	digable = false,
 	sunlight_propagates = true,
 	pointable = false,
@@ -60,7 +44,7 @@ minetest.register_node("edge:cave_correction", {
 
 -- This ABM repairs the wall after the cave generator rips holes in it.
 minetest.register_abm({
-	nodenames = {"group:edge"},
+	nodenames = {"edge:node"},
 	neighbors = {"air"},
 	interval = 1,
 	chance = 1,
